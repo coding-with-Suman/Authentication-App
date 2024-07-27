@@ -167,3 +167,4 @@ S:\S2\Angular Projects\JWTAuth\AuthAPI\obj\Debug\net8.0\refint\AuthAPI.dll
 S:\S2\Angular Projects\JWTAuth\AuthAPI\obj\Debug\net8.0\AuthAPI.pdb
 S:\S2\Angular Projects\JWTAuth\AuthAPI\obj\Debug\net8.0\AuthAPI.genruntimeconfig.cache
 S:\S2\Angular Projects\JWTAuth\AuthAPI\obj\Debug\net8.0\ref\AuthAPI.dll
+S:\S2\Angular Projects\JWTAuth\AuthAPI\obj\Debug\net8.0\AuthAPI.sourcelink.json
