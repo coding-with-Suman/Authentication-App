@@ -5,6 +5,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-login',
@@ -31,7 +32,7 @@ export class LoginComponent implements OnInit {
         });
         this.router.navigate(['/']);
       },
-      error: (error) => {
+      error: (error : HttpErrorResponse) => {
         this.matSnackBar.open(error.error.message, 'Close', {
           duration: 5000,
           horizontalPosition: 'center',

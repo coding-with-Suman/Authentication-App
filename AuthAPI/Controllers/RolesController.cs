@@ -60,7 +60,7 @@ namespace AuthAPI.Controllers
         }
 
 
-
+        [AllowAnonymous]
         [HttpGet("Roles")]
         public async Task<ActionResult<IEnumerable<RoleDetailsDto>>> GetRoles()
         {
