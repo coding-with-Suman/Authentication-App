@@ -8,6 +8,7 @@ import { HttpClient } from '@angular/common/http';
 import { jwtDecode } from 'jwt-decode';
 import { RegisterRequest } from '../interfaces/register-request';
 import { UserProfile } from '../interfaces/user-profile';
+import { ResetPasswordRequest } from '../interfaces/reset-password-request';
 
 @Injectable({
   providedIn: 'root',
@@ -54,6 +55,28 @@ export class AuthService {
 
     return userDetail;
   };
+
+  getUsers = () : Observable<UserProfile[]> => {
+    return this.http.get<UserProfile[]>(`${this.apiUrl}Account/Users`);
+  }
+
+  getRoles = () : string[] | null => {
+    const token = this.getToken();
+
+    if(!token) return null;
+
+    const decodedToken : any = jwtDecode(token);
+
+    return decodedToken.role || null ;
+  }
+
+  forgotPassword = (email : string) : Observable<AuthResponse> => {
+    return this.http.post<AuthResponse>(`${this.apiUrl}Account/ForgotPassword`, {email});
+  }
+
+  resetPassword = (data : ResetPasswordRequest) : Observable<AuthResponse> => {
+    return this.http.post<AuthResponse>(`${this.apiUrl}Account/ResetPassword`, data);
+  }
 
   isLoggedIn = (): boolean => {
     const token = this.getToken();

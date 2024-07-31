@@ -6,7 +6,7 @@ import { MatSelectModule } from '@angular/material/select'
 import { Router, RouterLink } from '@angular/router';
 import { RoleService } from '../../services/role.service';
 import { Observable } from 'rxjs';
-import { Role } from '../../interfaces/Role';
+import { Role } from '../../interfaces/role';
 import { AsyncPipe, CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';

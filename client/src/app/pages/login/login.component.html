@@ -24,7 +24,9 @@
             </mat-icon>
         </mat-form-field>
 
-        <button type="submit" [disabled]="!form.valid" class="w-full border border-slate-200 rounded-md disabled:bg-cyan-900 disabled:text-gray-100 py-2 px-3 bg-cyan-600 text-white font-bold">
+        <a routerLink="/forgot-password" class="text-blue-600 font-semibold text-sm">Forgot Password?</a>
+
+        <button type="submit" [disabled]="!form.valid" class="w-full mt-4  border border-slate-200 rounded-md disabled:bg-cyan-900 disabled:text-gray-100 py-2 px-3 bg-cyan-600 text-white font-bold">
             Login
         </button>
         
