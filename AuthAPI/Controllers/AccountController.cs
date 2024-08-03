@@ -4,6 +4,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using AuthAPI.Dtos;
@@ -105,12 +106,86 @@ namespace AuthAPI.Controllers
 
             var token = GenerateToken(user);
 
+            var refreshToken = GenerateRefreshToken();
+            int.TryParse(_configuration.GetSection("JWTSettings").GetSection("refreshTokenValidityIn").Value!, out int refreshTokenValidityIn);
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddMinutes(refreshTokenValidityIn);
+            await _userManager.UpdateAsync(user);
+
+
             return Ok(new AuthResponseDto{
                 IsSuccess = true,
                 Message = "User logged in successfully",
-                Token = token
+                Token = token,
+                RefreshToken = refreshToken
             });
 
+        }
+
+        [AllowAnonymous]
+        [HttpPost("RefreshToken")]
+        public async Task<ActionResult<AuthResponseDto>> RefreshToken(TokenDto tokenDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var principal = GetPrincipalFromExpiredToken(tokenDto.Token);
+            var user = await _userManager.FindByEmailAsync(tokenDto.Email);
+
+            if(user is null || principal is null || user.RefreshToken != tokenDto.RefreshToken || user.RefreshTokenExpiryTime <= DateTime.UtcNow){
+                return Unauthorized(new AuthResponseDto{
+                    IsSuccess = false,
+                    Message = "Invalid refresh token"
+
+                });
+            }
+
+            var newJwtToken = GenerateToken(user);
+            var newRefreshToken = GenerateRefreshToken();
+            user.RefreshToken = newRefreshToken;
+            int.TryParse(_configuration.GetSection("JWTSettings").GetSection("refreshTokenValidityIn").Value!, out int refreshTokenValidityIn);
+            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddMinutes(refreshTokenValidityIn);
+            await _userManager.UpdateAsync(user);
+
+            return Ok(new AuthResponseDto{
+                IsSuccess = true,
+                Message = "Token Refreshed successfully",
+                Token = newJwtToken,
+                RefreshToken = newRefreshToken
+
+            });
+            
+
+        }
+
+        private ClaimsPrincipal? GetPrincipalFromExpiredToken(string token){
+            
+            var tokenHandler = new JwtSecurityTokenHandler();
+
+            var tokenParameters = new TokenValidationParameters{
+                ValidateAudience = false,
+                ValidateIssuer = false,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey =  new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetSection("JWTSettings").GetSection("securityKey").Value!)),
+                ValidateLifetime = false
+            };
+
+            var principal = tokenHandler.ValidateToken(token, tokenParameters, out SecurityToken securityToken);
+
+            if(securityToken is not JwtSecurityToken jwtSecurityToken || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase)){
+                throw new SecurityTokenException("Invalid Token");
+            }
+
+            return principal;
+        }
+
+        private string GenerateRefreshToken(){
+            var randomNumber = new byte[32];
+            using var randomNumberGenerator = RandomNumberGenerator.Create();
+            randomNumberGenerator.GetBytes(randomNumber);
+            return Convert.ToBase64String(randomNumber);
         }
 
         private string GenerateToken(AppUser user)
@@ -275,5 +350,33 @@ namespace AuthAPI.Controllers
 
         }
 
+
+        [Authorize]
+        [HttpPost("ChangePassword")]
+        public async Task<ActionResult> ChangePassword (ChangePasswordDto changePasswordDto) {
+            var user = await _userManager.FindByEmailAsync(changePasswordDto.Email);
+            // resetPasswordDto.Token = WebUtility.UrlDecode(resetPasswordDto.Token);
+
+            if(user is null){
+                return BadRequest(new AuthResponseDto{
+                    IsSuccess = false,
+                    Message = "User does not exits."
+                });
+            }
+
+            var result = await _userManager.ChangePasswordAsync(user, changePasswordDto.CurrentPassword, changePasswordDto.NewPassword);
+
+            if(result.Succeeded){
+                return Ok(new AuthResponseDto{
+                    IsSuccess = true,
+                    Message = "Password change successfully"
+                });
+            }
+
+            return BadRequest(new AuthResponseDto{
+                IsSuccess = false,
+                Message = result.Errors.FirstOrDefault()!.Description
+            }); 
+        }
     }
 }

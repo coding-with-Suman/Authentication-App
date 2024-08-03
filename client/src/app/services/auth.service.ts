@@ -9,13 +9,15 @@ import { jwtDecode } from 'jwt-decode';
 import { RegisterRequest } from '../interfaces/register-request';
 import { UserProfile } from '../interfaces/user-profile';
 import { ResetPasswordRequest } from '../interfaces/reset-password-request';
+import { ChangePassword } from '../interfaces/change-password';
+import { RefreshToken } from '../interfaces/refresh-token';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
   apiUrl: string = environment.apiUrl;
-  private tokenKey : string = 'token';
+  private userKey : string = 'user';
 
   constructor(private http: HttpClient) {}
 
@@ -25,7 +27,7 @@ export class AuthService {
       .pipe(
         map((response) => {
           if (response.isSuccess) {
-            localStorage.setItem(this.tokenKey, response.token);
+            localStorage.setItem(this.userKey, JSON.stringify(response));
           }
           return response;
         })
@@ -78,6 +80,14 @@ export class AuthService {
     return this.http.post<AuthResponse>(`${this.apiUrl}Account/ResetPassword`, data);
   }
 
+  changePassword = (data : ChangePassword) : Observable<AuthResponse> => {
+    return this.http.post<AuthResponse>(`${this.apiUrl}Account/ChangePassword`, data);
+  }
+
+  refreshToken = (data : RefreshToken) : Observable<AuthResponse> => {
+    return this.http.post<AuthResponse>(`${this.apiUrl}Account/RefreshToken`, data);
+  }
+
   isLoggedIn = (): boolean => {
     const token = this.getToken();
     if (!token) return false;
@@ -89,7 +99,7 @@ export class AuthService {
     if (!token) return true;
     const decoded = jwtDecode(token);
     const isTokenExpired = Date.now() >= decoded['exp']! * 1000;
-    if (isTokenExpired) this.logout();
+    // if (isTokenExpired) this.logout();
     return isTokenExpired;
   }
 
@@ -97,6 +107,18 @@ export class AuthService {
     localStorage.removeItem(this.tokenKey);
   };
 
-  getToken = (): string | null =>
-    localStorage.getItem(this.tokenKey) || '';
+  getToken = (): string | null => {
+    const user = localStorage.getItem(this.userKey);
+    if(!user) return null;
+    const userDetail : AuthResponse = JSON.parse(user);
+    return userDetail.token;
+  }
+
+  getRefreshToken = (): string | null => {
+    const user = localStorage.getItem(this.userKey);
+    if(!user) return null;
+    const userDetail : AuthResponse = JSON.parse(user);
+    return userDetail.refreshToken;
+  }
+    
 }
