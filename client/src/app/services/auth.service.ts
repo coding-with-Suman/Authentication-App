@@ -104,7 +104,7 @@ export class AuthService {
   }
 
   logout = (): void => {
-    localStorage.removeItem(this.tokenKey);
+    localStorage.removeItem("user");
   };
 
   getToken = (): string | null => {
