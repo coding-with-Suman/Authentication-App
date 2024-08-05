@@ -289,18 +289,18 @@ namespace AuthAPI.Controllers
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
             var resetLink = $"http://localhost:4200/reset-password?email={user.Email}&token={WebUtility.UrlEncode(token)}";
 
-            var client = new RestClient("https://sandbox.api.mailtrap.io/api/send/3052899");
+            var client = new RestClient("your mailtrap client url");
 
             var request = new RestRequest{
                 Method = Method.Post,
                 RequestFormat = DataFormat.Json
             };
 
-            request.AddHeader("Authorization", "Bearer 98c6730db467a873b9bed61fa18479bb");
+            request.AddHeader("Authorization", "Your mailtrap bearar token");
             request.AddJsonBody(new{
-                from = new {email = "mailtrap@demomailtrap.com" },
+                from = new {email = "your mailtrap email" },
                 to = new[] { new {email = user.Email } },
-                template_uuid = "6112b602-0a1e-49f1-8b97-3b801053bb82",
+                template_uuid = "your mailtrap uuid",
                 template_variables = new {email = user.Email, resetLink = resetLink}
             });
 
